@@ -18,7 +18,10 @@ class Homework3:
         parsed_data = self.parse_training_data()
         self.y = parsed_data[0]
         self.train_data = parsed_data[1]
-        self.test_data = self.parse_test_data()
+        # self.test_data = self.parse_test_data()
+
+    def linekey(self, d):
+        return tuple(d[2:4])
 
     def parse_training_data(self):
         f = gzip.open("ucni-podatki/train.csv.gz", "rt", encoding="utf-8")
@@ -27,25 +30,28 @@ class Homework3:
         dataY = defaultdict(list)
         dataX = defaultdict(list)
         raw = [d for d in reader]
-        print("Parsing train_data")
+        print("===Parsing train_data===")
+        i = 465562
         for d in raw:
-            dataY[average.linekey(d)].append(float(lpputils.tsdiff(d[8], d[6])))
-            # dataX[average.linekey(d)].append([float(time.mktime(lpputils.parsedate(d[6]).timetuple())), float(time.mktime(lpputils.parsedate(d[8]).timetuple()))])
-            dataX[average.linekey(d)].append([float(time.mktime(lpputils.parsedate(d[6]).timetuple()))])
+            print(i)
+            id_trip = tuple(d[2:4])
+            dataY[id_trip].append(float(lpputils.tsdiff(d[8], d[6])))
+            dataX[id_trip].append([float(time.mktime(lpputils.parsedate(d[6]).timetuple()))])
+            i -= 1
 
         return [dataY, dataX]
 
-    def parse_test_data(self):
-        f = gzip.open("ucni-podatki/test.csv.gz", "rt", encoding="utf-8")
-        reader = csv.reader(f, delimiter="\t")
-        next(reader)
-        data = defaultdict(list)
-        raw = [d for d in reader]
-        print("Parsing test_data")
-        for d in raw:
-            data[average.linekey(d)].append([float(time.mktime(lpputils.parsedate(d[6]).timetuple()))])
-
-        return data
+    # def parse_test_data(self):
+    #     f = gzip.open("ucni-podatki/test.csv.gz", "rt", encoding="utf-8")
+    #     reader = csv.reader(f, delimiter="\t")
+    #     next(reader)
+    #     data = defaultdict(list)
+    #     raw = [d for d in reader]
+    #     print("Parsing test_data")
+    #     for d in raw:
+    #         data[average.linekey(d)].append([float(time.mktime(lpputils.parsedate(d[6]).timetuple()))])
+    #
+    #     return data
 
     def do_it(self):
         models = defaultdict(list)
@@ -56,30 +62,27 @@ class Homework3:
             lr = linear.LinearLearner(lambda_=0.05)
             models[m] = lr(Xsp, y)
 
-        i = 0
-        f = open("result.txt", "wt")
-        for a in self.test_data:
-            print(''.join(a))
-            for b in self.test_data[a]:
-                # print(b)
-                # if a in self.train_data:
-                #     # print(models[a](np.array(float(b[0]))), i)
-                #     trip_len = models[a](np.array(float(b[0])))
-                #     arrival_time = lpputils.tsadd(datetime.datetime.fromtimestamp(timestamp=int(b[0])).strftime("%Y-%m-%d %H:%M:%S.%f"), trip_len)
-                #     print('Departure:', datetime.datetime.fromtimestamp(timestamp=int(b[0])).strftime("%Y-%m-%d %H:%M:%S.%f"), 'Trip Len:', trip_len, 'Arrival:', arrival_time)
-                #     # with open("test.txt", "wt") as out_file:
-                #     #     out_file.write("This Text is going to out file\nLook at it and see!")
-                #     f.write(arrival_time + "\n")
-
-                trip_len = models[a](np.array(float(b[0])))
-                arrival_time = lpputils.tsadd(datetime.datetime.fromtimestamp(timestamp=int(b[0])).strftime("%Y-%m-%d %H:%M:%S.%f"), trip_len)
-                print('Departure:', datetime.datetime.fromtimestamp(timestamp=int(b[0])).strftime("%Y-%m-%d %H:%M:%S.%f"), 'Trip Len:', trip_len, 'Arrival:', arrival_time)
-                f.write(arrival_time + "\n")
-                i+=1
+        f = gzip.open("ucni-podatki/test.csv.gz", "rt", encoding="utf-8")
+        reader = csv.reader(f, delimiter="\t")
+        next(reader)
+        raw = [d for d in reader]
         f.close()
-            # # print(a, len(self.test_data[a]), len(self.y[a]))
-            # if len(self.test_data[a]) > 0 and len(self.y[a]) > 0:
-            # print(models[a](np.array(self.test_data[a])))
+        fo = open("result.txt", "wt")
+        i = 23043
+        print("===Predicting===")
+        for line in raw:
+            print(i)
+            id_trip = tuple(line[2:4])
+            departure_time = float(time.mktime(lpputils.parsedate(line[6]).timetuple()))
+            trip_time = models[id_trip](np.array(float(departure_time)))
+            arrival_time = lpputils.tsadd(datetime.datetime.fromtimestamp(timestamp=int(departure_time)).strftime("%Y-%m-%d %H:%M:%S.%f"), trip_time)
+            print('Departure:', datetime.datetime.fromtimestamp(timestamp=int(departure_time)).strftime("%Y-%m-%d %H:%M:%S.%f"), 'Trip Len:', trip_time, 'Arrival:', arrival_time)
+            fo.write(arrival_time + "\n")
+            i -= 1
+        fo.close()
+
+
+
 
 
 hw = Homework3().do_it()

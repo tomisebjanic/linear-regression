@@ -6,7 +6,7 @@ import lpputils
 from collections import defaultdict
 
 def linekey(d):
-    return tuple(d[2:5])
+    return tuple(d[2:3])
 
 class SeparateBySetLearner(object):
 

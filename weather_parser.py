@@ -17,17 +17,15 @@ FILES = {
 }
 
 
-class WeatherParser:
+def parse():
+    data = defaultdict(float)
+    for file in FILES:
+        f = open(FILES[file], "r", encoding="utf-8")
+        reader = csv.reader(f, delimiter="\t")
+        next(reader)
+        for line in reader:
+            key = (file + line[0]) if len(line[0]) > 1 else (file + '0' + line[0])
+            data[key] = float(line[2]) if line[2] != '' else 0.
+        f.close()
 
-    def parse(self):
-        data = defaultdict(float)
-        for file in FILES:
-            f = open(FILES[file], "r", encoding="utf-8")
-            reader = csv.reader(f, delimiter="\t")
-            next(reader)
-            for line in reader:
-                key = (file + line[0]) if len(line[0]) > 1 else (file + '0' + line[0])
-                data[key] = float(line[2]) if line[2] != '' else 0.
-            f.close()
-
-        return data
+    return data

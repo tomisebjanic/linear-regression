@@ -10,25 +10,28 @@ import time
 import datetime
 import weather_parser
 
-# Registration          0
-# Driver ID	            1
-# Route	                2
-# Route Direction	    3
-# Route description	    4
-# First station	        5
-# Departure time	    6
-# Last station	        7
-# Arrival time          8
+"""
+Registration        0
+Driver ID	        1
+Route	            2
+Route Direction	    3
+Route description	4
+First station	    5
+Departure time	    6
+Last station	    7
+Arrival time        8
 
-# Morning rush hour: 7:00 - 9:00
-# Afternoon rush hour: 15:00 - 17:00
-# Busy days: mon, tue, wed, thu, fri
+Morning rush hour: 7:00 - 9:00
+Afternoon rush hour: 15:00 - 17:00
+Busy days: mon, tue, wed, thu, fri
 
-# Best model contains params:
-#   - Departure time
-#   - Busy day
-#   - Holidays
-#   - Amount of rain
+Best model contains params:
+  - Departure time
+  - Driver ID
+  - Busy day
+  - Holidays
+  - Amount of rain
+"""
 
 FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 BUSY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
@@ -67,23 +70,17 @@ class Homework3:
             print(i)
             id_trip = tuple(d[2:4])
             departure_time_obj = datetime.datetime.strptime(d[6], FORMAT)
-            # features = [self.get_time(d[6])]
-            features = self.do_magic(self.get_time(d[6]), 10)
 
-            # if 7 <= departure_time_obj.hour <= 9:
-            #     params.append(1.)
-            # else:
-            #     params.append(0.)
-            # if 15 <= departure_time_obj.hour <= 17:
-            #     params.append(1.)
-            # else:
-            #     params.append(0.)
-            features.append(float(d[1]))
-            features.append(1.) if departure_time_obj.strftime("%A") in BUSY else features.append(0.)
-            features.append(1.) if self.weather[d[6][0:10]] > 10 else features.append(0.)
-            features.append(1.) if d[6][0:11] in HOLIDAYS else features.append(0.)
-            dataY[id_trip].append(float(lpputils.tsdiff(d[8], d[6]))/NORM)   # Trip Time
+            features = self.do_magic(self.get_time(d[6]), 10)                                           # Departure Time
+            # features.append(1.) if 7 <= departure_time_obj.hour <= 9 else features.append(0.)           # Morning RH
+            # features.append(1.) if 15 <= departure_time_obj.hour <= 17 else features.append(0.)         # Afternoon RH
+            features.append(float(d[1]))                                                                # Driver ID
+            features.append(1.) if departure_time_obj.strftime("%A") in BUSY else features.append(0.)   # Weekday
+            features.append(1.) if self.weather[d[6][0:10]] > 10 else features.append(0.)               # Rain
+            features.append(1.) if d[6][0:11] in HOLIDAYS else features.append(0.)                      # Holiday
+            dataY[id_trip].append(float(lpputils.tsdiff(d[8], d[6]))/NORM)                              # Trip Time
             dataX[id_trip].append(features)
+
             i -= 1
 
         return [dataY, dataX]
@@ -109,20 +106,15 @@ class Homework3:
             id_trip = tuple(line[2:4])
             dt = line[6]
             departure_time_obj = datetime.datetime.strptime(dt, FORMAT)
-            # features = [self.get_time(line[6])]
+
             features = self.do_magic(self.get_time(line[6]), 10)
-            # if 7 <= departure_time_obj.hour <= 9:
-            #     params.append(1.)
-            # else:
-            #     params.append(0.)
-            # if 15 <= departure_time_obj.hour <= 17:
-            #     params.append(1.)
-            # else:
-            #     params.append(0.)
+            # features.append(1.) if 7 <= departure_time_obj.hour <= 9 else features.append(0.)
+            # features.append(1.) if 15 <= departure_time_obj.hour <= 17 else features.append(0.)
             features.append(float(line[1]))
             features.append(1.) if departure_time_obj.strftime("%A") in BUSY else features.append(0.)
             features.append(1.) if self.weather[line[6][0:10]] > 10 else features.append(0.)
             features.append(1.) if line[6][0:11] in HOLIDAYS else features.append(0.)
+
             trip_time = models[id_trip](np.array(features))*NORM
             arrival_time = lpputils.tsadd(dt, trip_time)
 

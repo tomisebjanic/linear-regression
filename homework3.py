@@ -91,6 +91,15 @@ class Homework3:
             lr = linear.LinearLearner(lambda_=0.5)
             models[m] = lr(Xsp, y)
 
+        # Internal test
+        N = 0
+        s = 0
+        for m in self.train_data:
+            X = self.train_data[m][0]
+            ai = models[m](np.array(X))*NORM
+            s += ai - self.y[m][0]
+            N += 1
+
         f = gzip.open("ucni-podatki/test.csv.gz", "rt", encoding="utf-8")
         reader = csv.reader(f, delimiter="\t")
         next(reader)
@@ -117,5 +126,7 @@ class Homework3:
 
             fo.write(arrival_time + "\n")
         fo.close()
+
+        print("Result of internal test:", s/N)
 
 Homework3().predict()

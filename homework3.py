@@ -41,6 +41,7 @@ HOLIDAYS = ['2012-01-01', '2012-01-02', '2012-02-08', '2012-04-08', '2012-04-09'
             '2012-05-02', '2012-06-25', '2012-08-15', '2012-10-31', '2012-11-01', '2012-12-25', '2012-12-26']
 NORM = 100000.
 
+
 class Homework3:
 
     def __init__(self):
@@ -96,9 +97,11 @@ class Homework3:
         s = 0
         for m in self.train_data:
             X = self.train_data[m][0]
-            ai = models[m](np.array(X))*NORM
+            ai = models[m](np.array(X))
             s += ai - self.y[m][0]
             N += 1
+
+        internal_test = s*NORM / N
 
         f = gzip.open("ucni-podatki/test.csv.gz", "rt", encoding="utf-8")
         reader = csv.reader(f, delimiter="\t")
@@ -127,6 +130,6 @@ class Homework3:
             fo.write(arrival_time + "\n")
         fo.close()
 
-        print("Result of internal test:", s/N)
+        print("Result of internal test:", internal_test)
 
 Homework3().predict()

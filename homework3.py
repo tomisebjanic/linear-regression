@@ -21,6 +21,8 @@ Departure time	    6
 Last station	    7
 Arrival time        8
 
+Line key = [Route, Route Direction]
+
 Morning rush hour: 7:00 - 9:00
 Afternoon rush hour: 15:00 - 17:00
 Busy days: mon, tue, wed, thu, fri
@@ -47,14 +49,11 @@ class Homework3:
         self.y = parsed_data[0]
         self.train_data = parsed_data[1]
 
-    def linekey(self, d):
-        return tuple(d[2:4])
-
     def get_time(self, t):
         time_obj = datetime.datetime.strptime(t, FORMAT)
         return float(time_obj.hour*3600 + time_obj.minute*60 + time_obj.second)/NORM
 
-    def do_magic(self, t, n):
+    def get_powers_of(self, t, n):
         return [t**i for i in range(1, n+1)]
 
     def parse_training_data(self):
@@ -71,9 +70,7 @@ class Homework3:
             id_trip = tuple(d[2:4])
             departure_time_obj = datetime.datetime.strptime(d[6], FORMAT)
 
-            features = self.do_magic(self.get_time(d[6]), 10)                                           # Departure Time
-            # features.append(1.) if 7 <= departure_time_obj.hour <= 9 else features.append(0.)           # Morning RH
-            # features.append(1.) if 15 <= departure_time_obj.hour <= 17 else features.append(0.)         # Afternoon RH
+            features = self.get_powers_of(self.get_time(d[6]), 10)                                      # Departure Time
             features.append(float(d[1]))                                                                # Driver ID
             features.append(1.) if departure_time_obj.strftime("%A") in BUSY else features.append(0.)   # Weekday
             features.append(1.) if self.weather[d[6][0:10]] > 10 else features.append(0.)               # Rain
@@ -85,7 +82,7 @@ class Homework3:
 
         return [dataY, dataX]
 
-    def do_it(self):
+    def predict(self):
         models = defaultdict(list)
         for m in self.train_data:
             X = np.array(self.train_data[m])
@@ -107,9 +104,7 @@ class Homework3:
             dt = line[6]
             departure_time_obj = datetime.datetime.strptime(dt, FORMAT)
 
-            features = self.do_magic(self.get_time(line[6]), 10)
-            # features.append(1.) if 7 <= departure_time_obj.hour <= 9 else features.append(0.)
-            # features.append(1.) if 15 <= departure_time_obj.hour <= 17 else features.append(0.)
+            features = self.get_powers_of(self.get_time(line[6]), 10)
             features.append(float(line[1]))
             features.append(1.) if departure_time_obj.strftime("%A") in BUSY else features.append(0.)
             features.append(1.) if self.weather[line[6][0:10]] > 10 else features.append(0.)
@@ -123,4 +118,4 @@ class Homework3:
             fo.write(arrival_time + "\n")
         fo.close()
 
-Homework3().do_it()
+Homework3().predict()
